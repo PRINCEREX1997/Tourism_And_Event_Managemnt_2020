@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -73,9 +75,8 @@ class _LogInState extends State<LogIn> {
 
   Widget googleSignInButton() {
     return OutlineButton(
-      color: Colors.white,
-      splashColor: Colors.cyanAccent,
-
+      color: Colors.white10,
+      splashColor: Colors.white,
       onPressed: () {
         signInWithGoogle().then((result) {
           Navigator.of(context).push(
@@ -90,7 +91,7 @@ class _LogInState extends State<LogIn> {
 
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       highlightElevation: 0,
-      borderSide: BorderSide(color: Colors.white, width: 2),
+      borderSide: BorderSide(color: Colors.white70, width: 2),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
         child: Row(
@@ -104,7 +105,7 @@ class _LogInState extends State<LogIn> {
                 'Sign in with Google',
                 style: TextStyle(
                   fontSize: 15,
-                  color: Colors.grey,
+                  color: Colors.white,
                 ),
               ),
             )
@@ -134,7 +135,7 @@ class _LogInState extends State<LogIn> {
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: [
                     BoxShadow(
-                        color: Colors.white,
+                        color: Colors.white10,
                         blurRadius: 500,
                         offset: Offset(0,5)
                     )
@@ -175,7 +176,7 @@ class _LogInState extends State<LogIn> {
           Text(
             'Password',
             style: TextStyle(
-                color: Colors.black,
+                color: Colors.white,
                 fontSize: 16,
                 fontWeight: FontWeight.bold
             ),
@@ -184,11 +185,11 @@ class _LogInState extends State<LogIn> {
           Container(
               alignment: Alignment.centerLeft,
               decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Colors.white10,
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: [
                     BoxShadow(
-                        color: Colors.black,
+                        color: Colors.white10,
                         blurRadius: 6,
                         offset: Offset(0,2)
                     )
@@ -230,7 +231,7 @@ class _LogInState extends State<LogIn> {
           child: Text(
             'Forgot Password?',
             style:TextStyle(
-                color: Colors.black
+                color: Colors.white
             ),
           )
       ),
@@ -259,8 +260,8 @@ class _LogInState extends State<LogIn> {
             Text(
               'Remember me',
               style: TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.bold
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold
               ),
             )
           ],
@@ -270,31 +271,29 @@ class _LogInState extends State<LogIn> {
 
   Widget buildLoginBtn(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 25),
-      width: double.infinity,
-      child: RaisedButton(
-        elevation: 5,
-        onPressed: () async {
-          _login(context);
-        },
-        padding: EdgeInsets.all(15),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15)
-        ),
-        color: Colors.white,
-        child: Text(
-          'Login',
-          style: TextStyle(
-            color: Color(0xFF18FFFF),
-          fontSize: 18,
-          fontWeight: FontWeight.bold
+        padding: EdgeInsets.symmetric(vertical: 25),
+        width: double.infinity,
+        child: FlatButton(
+          minWidth: 200,
+          onPressed: () async {
+            _login(context);
+          },
+          padding: EdgeInsets.fromLTRB(0, 15, 0, 10),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10)
           ),
-        ),
-      )
+          color: Colors.white10,
+          child: Text(
+            'Log In',
+            style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                fontFamily: "Times New Roman"
+            ),
+          ),
+        )
     );
-
-
-
   }
 
   Widget buildSignUpBtn(BuildContext context) {
@@ -306,30 +305,30 @@ class _LogInState extends State<LogIn> {
         )
       },
       child: RichText(
-        text: TextSpan(
-          children: [
-            TextSpan(
-              text: 'Don\'t have an Account?   ',
-              style: TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.w500,
-                fontSize: 16,
-                fontFamily: "Times new Roman"
-              )
-            ),
+          text: TextSpan(
+              children: [
+                TextSpan(
+                    text: 'Don\'t have an Account?   ',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 16,
+                        fontFamily: "Times new Roman"
+                    )
+                ),
 
-            TextSpan(
-              text: 'Sign Up',
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                fontFamily: "Times new Roman"
-              )
-            )
-          ]
-      )
-    ),
+                TextSpan(
+                    text: 'Sign Up',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: "Times new Roman"
+                    )
+                )
+              ]
+          )
+      ),
     );
   }
 
@@ -354,73 +353,73 @@ class _LogInState extends State<LogIn> {
             child: Stack(
               children: <Widget>[
                 Container(
-                  alignment: Alignment.centerRight,
-                  height: double.infinity,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Color(0xDD6200EA),
-                          Color(0xAA6200EA),
-                          Color(0x996200EA),
-                          Color(0x886200EA),
-                          Color(0x776200EA),
-                          Color(0x666200EA),
-                          Color(0x666200EA),
-                        ]
+                    alignment: Alignment.centerRight,
+                    height: double.infinity,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Color(0xDD6200EA),
+                            Color(0xAA6200EA),
+                            Color(0x996200EA),
+                            Color(0x886200EA),
+                            Color(0x776200EA),
+                            Color(0x666200EA),
+                            Color(0x666200EA),
+                          ]
+                      ),
                     ),
-                  ),
-                  child: SingleChildScrollView(
-                    physics: AlwaysScrollableScrollPhysics(),
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 20
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        SizedBox(
-                          height: 30,
-                        ),
-                        buildEmail(),
-                        SizedBox(
-                          height: 20,
-                        ),
-                        buildPassword(),
-                        Row(
-                          children: <Widget>[
-                            buildRememberCb(),
-                            SizedBox(
-                              width: 100,
-                            ),
-                            buildForgotPassBtn(),
-                          ],
-                        ),
-                        buildLoginBtn(context),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        Text(
-                          'Or',
-                          style: TextStyle(
-                            fontFamily: 'Times New Roman',
-                            color: Colors.black,
-                            fontSize: 20,
+                    child: SingleChildScrollView(
+                      physics: AlwaysScrollableScrollPhysics(),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 20
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          SizedBox(
+                            height: 30,
                           ),
-                        ),
-                        SizedBox(
-                          height: 20,
-                        ),
-                        googleSignInButton(),
-                        SizedBox(
-                          height: 25,
-                        ),
-                        buildSignUpBtn(context)
-                      ],
-                    ),
-                  )
+                          buildEmail(),
+                          SizedBox(
+                            height: 20,
+                          ),
+                          buildPassword(),
+                          Row(
+                            children: <Widget>[
+                              buildRememberCb(),
+                              SizedBox(
+                                width: 100,
+                              ),
+                              buildForgotPassBtn(),
+                            ],
+                          ),
+                          SizedBox(
+                              width: 250,
+                              child: buildLoginBtn(context)
+                          ),
+                          Text(
+                            'or',
+                            style: TextStyle(
+                              fontFamily: 'Times New Roman',
+                              color: Colors.white,
+                              fontSize: 20,
+                            ),
+                          ),
+                          SizedBox(
+                            height: 25,
+                          ),
+                          googleSignInButton(),
+                          SizedBox(
+                            height: 25,
+                          ),
+                          buildSignUpBtn(context)
+                        ],
+                      ),
+                    )
                 )
               ],
             ),
