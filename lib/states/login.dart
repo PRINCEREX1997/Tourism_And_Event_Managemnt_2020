@@ -1,11 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-
-import 'package:smarttourism/states/sign_up.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:smarttourism/states/Home.dart';
+import 'package:smarttourism/states/sign_up.dart';
 
 final FirebaseAuth _auth =FirebaseAuth.instance;
 final GoogleSignIn googleSignIn = GoogleSignIn();
@@ -131,7 +130,7 @@ class _LogInState extends State<LogIn> {
           Container(
               alignment: Alignment.centerLeft,
               decoration: BoxDecoration(
-                  color: Colors.hite10w,
+                  color: Colors.white10,
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: [
                     BoxShadow(
