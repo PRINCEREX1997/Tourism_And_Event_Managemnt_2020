@@ -1,10 +1,25 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class home extends StatelessWidget {
-  var ename = 'Pirunthapan Y.';
-  var email = '2017e082@eng.jfn.ac.lk';
+
   @override
   Widget build(BuildContext context) {
+    FirebaseFirestore.instance
+        .collection('Users')
+        .doc(FirebaseAuth.instance.currentUser.uid)
+        .get()
+        .then((DocumentSnapshot documentSnapshot) {
+      print(documentSnapshot.get('First Name'));
+      print(documentSnapshot.get('Last Name'));
+      print(documentSnapshot.get('Email'));
+    }
+    );
+
+    var firstName = '';
+    var lastName = '';
+    var email = '';
     return MaterialApp(
         home: SafeArea(
           child: Scaffold(
@@ -15,8 +30,8 @@ class home extends StatelessWidget {
               elevation: 5.0,
               child: Column(children: <Widget>[
                 UserAccountsDrawerHeader(
-                  accountName: Text("$ename"),
-                  accountEmail: Text("$email"),
+                  accountName: Text(firstName),
+                  accountEmail: Text(email),
                   currentAccountPicture: CircleAvatar(
                     backgroundColor: Colors.white,
                     child: Text('Profile'),
@@ -53,6 +68,12 @@ class home extends StatelessWidget {
                 ListTile(
                   title: Text('Sign Out'),
                   leading: Icon(Icons.logout),
+                  onTap: () async {
+                    await FirebaseAuth.instance.signOut();
+                    Navigator.pop(
+                        context
+                    );
+                  },
                 ),
                 Divider(
                   height: 1,

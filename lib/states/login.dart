@@ -79,6 +79,7 @@ class _LogInState extends State<LogIn> {
       splashColor: Colors.white,
       onPressed: () {
         signInWithGoogle().then((result) {
+          print(result);
           Navigator.of(context).push(
             MaterialPageRoute(
                 builder: (context) {
@@ -250,7 +251,7 @@ class _LogInState extends State<LogIn> {
                 value: isRememberMe,
                 checkColor: Colors.black,
                 activeColor: Colors.white,
-                onChanged: ( bool value) {
+                onChanged: (bool value) {
                   setState(() {
                     isRememberMe = value;
                   });

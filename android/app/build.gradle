@@ -26,6 +26,7 @@ apply plugin: 'com.google.gms.google-services'
 apply plugin: 'kotlin-android'
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
+
 android {
     compileSdkVersion 29
 
@@ -42,6 +43,7 @@ android {
         applicationId "com.u20178273.smarttourism"
         minSdkVersion 16
         targetSdkVersion 29
+        multiDexEnabled true
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
@@ -64,4 +66,5 @@ dependencies {
     implementation 'com.google.firebase:firebase-analytics-ktx'
     implementation 'com.google.firebase:firebase-auth:19.4.0'
     implementation 'com.google.android.gms:play-services-auth:18.1.0'
+    implementation 'com.android.support:multidex:1.0.3'
 }
