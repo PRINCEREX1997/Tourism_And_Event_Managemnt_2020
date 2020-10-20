@@ -1,65 +1,21 @@
 import 'dart:ui';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:smarttourism/states/Home.dart';
+import 'package:smarttourism/states/LocalUser.dart';
+import 'package:smarttourism/states/home.dart';
 import 'package:smarttourism/states/sign_up.dart';
 
+LocalUser userInfo = new LocalUser();
 final FirebaseAuth _auth =FirebaseAuth.instance;
 final GoogleSignIn googleSignIn = GoogleSignIn();
 final TextEditingController _emailController = TextEditingController();
 final TextEditingController _passwordController = TextEditingController();
 
-Future<String> signInWithGoogle() async {
-  final GoogleSignInAccount googleSignInAccount = await googleSignIn.signIn();
-  final GoogleSignInAuthentication googleSignInAuthentication = await googleSignInAccount.authentication;
-
-  final AuthCredential credential = GoogleAuthProvider.credential(
-    accessToken: googleSignInAuthentication.accessToken,
-    idToken: googleSignInAuthentication.idToken,
-  );
-
-  final UserCredential authResult = await _auth.signInWithCredential(credential);
-  final User user = authResult.user;
-
-  if (user != null) {
-    assert(!user.isAnonymous);
-    assert(await user.getIdToken() != null);
-
-    final User currentUser = _auth.currentUser;
-    assert(user.uid == currentUser.uid);
-
-    print('signInWithGoogle succeeded: $user');
-
-    return '$user';
-  }
-  return null;
-}
-
-void _login(BuildContext context) async {
-  try{
-    final User user = (await _auth.signInWithEmailAndPassword(
-        email: _emailController.text,
-        password: _passwordController.text
-    )).user;
-    if (user != null) {
-      print(user.uid);
-      Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => home(),)
-      );
-    }
-  } on FirebaseAuthException catch (e) {
-    if (e.code == 'user-not-found') {
-      print('No user found for that email.');
-    } else if (e.code == 'wrong-password') {
-      print('Wrong password provided for that user.');
-    }
-  }
-}
 
 class LogIn extends StatefulWidget {
 
@@ -70,8 +26,72 @@ class LogIn extends StatefulWidget {
 
 class _LogInState extends State<LogIn> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
   bool isRememberMe = false;
+
+  Future<String> signInWithGoogle() async {
+    final GoogleSignInAccount googleSignInAccount = await googleSignIn.signIn();
+    final GoogleSignInAuthentication googleSignInAuthentication = await googleSignInAccount
+        .authentication;
+
+    final AuthCredential credential = GoogleAuthProvider.credential(
+      accessToken: googleSignInAuthentication.accessToken,
+      idToken: googleSignInAuthentication.idToken,
+    );
+
+    final UserCredential authResult = await _auth.signInWithCredential(
+        credential);
+    final User user = authResult.user;
+
+    if (user != null) {
+      assert(!user.isAnonymous);
+      assert(await user.getIdToken() != null);
+
+      final User currentUser = _auth.currentUser;
+      assert(user.uid == currentUser.uid);
+
+      print('signInWithGoogle succeeded: $user');
+
+      return '$user';
+    }
+    return null;
+  }
+
+  void _login(BuildContext context) async {
+    try {
+      final User user = (await _auth.signInWithEmailAndPassword(
+          email: _emailController.text,
+          password: _passwordController.text
+      )).user;
+      if (user != null) {
+        goHome();
+      }
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+        print('No user found for that email.');
+      } else if (e.code == 'wrong-password') {
+        print('Wrong password provided for that user.');
+      }
+    }
+  }
+
+  List printDoc() {
+    FirebaseFirestore.instance
+        .collection('Places')
+        .get()
+        .then((QuerySnapshot querySnapshot) =>
+    {
+      querySnapshot.docs.forEach((element) {})
+    });
+  }
+
+  void goHome() {
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => Home()
+        )
+    );
+  }
 
   Widget googleSignInButton() {
     return OutlineButton(
@@ -80,13 +100,7 @@ class _LogInState extends State<LogIn> {
       onPressed: () {
         signInWithGoogle().then((result) {
           print(result);
-          Navigator.of(context).push(
-            MaterialPageRoute(
-                builder: (context) {
-                  return home();
-                }
-            ),
-          );
+          goHome();
         });
       },
 
@@ -427,5 +441,4 @@ class _LogInState extends State<LogIn> {
           )),
     );
   }
-
 }
