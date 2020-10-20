@@ -102,7 +102,7 @@ class Places extends StatelessWidget {
                                 children: <Widget>[
                                   Image(
                                     image:
-                                        AssetImage("lib/assets/test event.jpg"),
+                                    AssetImage(""),
                                   )
                                 ],
                               ),
