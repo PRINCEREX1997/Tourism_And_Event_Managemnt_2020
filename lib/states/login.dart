@@ -1,21 +1,12 @@
 import 'dart:ui';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:smarttourism/states/LocalUser.dart';
-import 'package:smarttourism/states/home.dart';
+import 'package:smarttourism/states/location_view.dart';
 import 'package:smarttourism/states/sign_up.dart';
-
-LocalUser userInfo = new LocalUser();
-final FirebaseAuth _auth =FirebaseAuth.instance;
-final GoogleSignIn googleSignIn = GoogleSignIn();
-final TextEditingController _emailController = TextEditingController();
-final TextEditingController _passwordController = TextEditingController();
-
 
 class LogIn extends StatefulWidget {
 
@@ -25,6 +16,18 @@ class LogIn extends StatefulWidget {
 }
 
 class _LogInState extends State<LogIn> {
+
+  FirebaseAuth _auth = FirebaseAuth.instance;
+  GoogleSignIn googleSignIn = GoogleSignIn();
+  TextEditingController _emailController = TextEditingController();
+  TextEditingController _passwordController = TextEditingController();
+
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool isRememberMe = false;
 
@@ -74,21 +77,12 @@ class _LogInState extends State<LogIn> {
     }
   }
 
-  List printDoc() {
-    FirebaseFirestore.instance
-        .collection('Places')
-        .get()
-        .then((QuerySnapshot querySnapshot) =>
-    {
-      querySnapshot.docs.forEach((element) {})
-    });
-  }
-
   void goHome() {
+    Navigator.pop(context);
     Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => Home()
+            builder: (context) => LocationView()
         )
     );
   }
