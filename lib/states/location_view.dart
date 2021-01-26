@@ -27,7 +27,7 @@ class _LocationViewState extends State<LocationView> {
 
   Widget streamBuild<QuerySnapshot>() {
     final DocumentReference document =
-        FirebaseFirestore.instance.collection("Users").doc(user.uid);
+    FirebaseFirestore.instance.collection("Users").doc(user.email);
     if (user.displayName == null) {
       document.get().then((value) {
         var fname = value.data()["First Name"].toString();
@@ -35,7 +35,7 @@ class _LocationViewState extends State<LocationView> {
         name = fname.toString() + " " + lname.toString();
         imgUrl = value.data()["ImgUrl"].toString();
         email = value.data()["Email"].toString();
-        pNum = value.data()["Mobile Number"].toString();
+        pNum = value.data()["Contact Number"].toString();
       });
     } else {
       name = user.displayName;
@@ -46,7 +46,8 @@ class _LocationViewState extends State<LocationView> {
     return Scaffold(
         appBar: AppBar(
           title: Text('Choose Location'),
-          backgroundColor: Color(0xDD6200EA),
+          backgroundColor: Color(0xFF6200EA),
+
         ),
         body: StreamBuilder(
           stream: places.snapshots(),
@@ -64,63 +65,83 @@ class _LocationViewState extends State<LocationView> {
             //0xDD6200EA
             return Container(
                 decoration: BoxDecoration(
-                  color: Color(0xFF6200EA),
-                  border: Border.all(
-                    color: Color(0xFF6200EA),
-                    width: 8,
-                  ),
-                ),
+                    gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Color(0xFF6200EA),
+                          Color(0x886200EA),
+                          Color(0x996200EA),
+                          Color(0xAA6200EA),
+                          Color(0xDD6200EA),
+                          Color(0xFF6200EA),
+                        ])),
                 width: MediaQuery.of(context).size.width,
                 child: ListView.builder(
                   itemCount: 25,
-                  itemExtent: 500,
+                  itemExtent: MediaQuery
+                      .of(context)
+                      .size
+                      .height * .6,
                   itemBuilder: (context, index) {
-                    return Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: Colors.white10,
-                          width: 8,
-                        ),
-                      ),
-                      width: MediaQuery.of(context).size.width * 0.95,
-                      child: Column(
-                        children: <Widget>[
-                          Image.network(
-                            url.elementAt(index),
-                            height: MediaQuery.of(context).size.height * 0.6,
-                            width: MediaQuery.of(context).size.height * 0.9,
-                            fit: BoxFit.fill,
-                          ),
-                          FlatButton(
-                            minWidth: MediaQuery.of(context).size.width * 0.9,
-                            height: MediaQuery.of(context).size.width * 0.15,
-                            onPressed: () {
-                              Userdata userdata =
-                                  Userdata(name, imgUrl, email, pNum);
-                              HomeScreenArgs homeScreenArgs = HomeScreenArgs(
-                                  userdata, district.elementAt(index));
-                              print(homeScreenArgs.userdata.name);
-                              print(homeScreenArgs.location);
+                    return GestureDetector(
+                      onTap: () {
+                        Userdata userdata =
+                        Userdata(name, imgUrl, email, pNum);
+                        HomeScreenArgs homeScreenArgs = HomeScreenArgs(
+                            userdata, district.elementAt(index));
 
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => Home(),
-                                      settings: RouteSettings(
-                                        arguments: homeScreenArgs,
-                                      )));
-                            },
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => Home(),
+                                settings: RouteSettings(
+                                  arguments: homeScreenArgs,
+                                )));
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(
                             color: Colors.white10,
-                            child: Text(
-                              district.elementAt(index),
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 32,
-                                fontFamily: "Times new Roman",
-                              ),
-                            ),
+                            width: 8,
                           ),
-                        ],
+                        ),
+                        child: Column(
+                          children: <Widget>[
+                            Image.network(
+                              url.elementAt(index),
+                              height: MediaQuery
+                                  .of(context)
+                                  .size
+                                  .height * 0.5,
+                              width: MediaQuery
+                                  .of(context)
+                                  .size
+                                  .height * 1,
+                              fit: BoxFit.fill,
+                            ),
+                            FlatButton(
+                              minWidth: MediaQuery
+                                  .of(context)
+                                  .size
+                                  .width * 1,
+                              height: MediaQuery
+                                  .of(context)
+                                  .size
+                                  .width * 0.05,
+                              color: Colors.white10,
+                              child: Text(
+                                district.elementAt(index),
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 32,
+                                  fontFamily: "Times new Roman",
+                                ),
+                              ),
+                              onPressed: () {},
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   },

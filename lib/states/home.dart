@@ -18,7 +18,9 @@ var name;
 var imgUrl;
 var email;
 var pNum;
-var selLoc;
+var lat;
+var lng;
+
 final TextEditingController _locController = TextEditingController();
 
 class Home extends StatefulWidget {
@@ -154,8 +156,9 @@ class _HomeState extends State<Home> {
               onTap: () async {
                 await FirebaseAuth.instance.signOut();
                 Navigator.of(context).pop();
-                Navigator.push(
-                    context, MaterialPageRoute(builder: (context) => LogIn()));
+                Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (context) =>
+                        LogIn()), (Route<dynamic> route) => false);
               },
             ),
           ]),
@@ -208,10 +211,7 @@ class PlaceTab extends StatefulWidget {
 }
 
 class _PlaceTabState extends State<PlaceTab> {
-  Query attraction = FirebaseFirestore.instance
-      .collection('Attractions')
-      .doc('RelegiousPlaces')
-      .collection('Temple');
+  Query attraction = FirebaseFirestore.instance.collection('Attractions');
 
   Widget loadingWindow() {
     return Container(
@@ -244,13 +244,16 @@ class _PlaceTabState extends State<PlaceTab> {
                 return loadingWindow();
               }
               final List name = snapshot.data.documents
-                  .map<String>((doc) => (doc.id).toString())
+                  .map<String>((doc) => (doc.data()['Name']).toString())
                   .toList();
               final List address = snapshot.data.documents
                   .map<String>((doc) => (doc.data()['Address']).toString())
                   .toList();
               final List url = snapshot.data.documents
                   .map<String>((doc) => (doc.data()['ImgUrl']).toString())
+                  .toList();
+              final List uid = snapshot.data.documents
+                  .map<String>((doc) => (doc.id.toString()))
                   .toList();
 
               return ListView.builder(
@@ -353,19 +356,25 @@ class _PlaceTabState extends State<PlaceTab> {
                                           .of(context)
                                           .size
                                           .width *
-                                          .12,
+                                          .15,
+                                      width:
+                                      MediaQuery
+                                          .of(context)
+                                          .size
+                                          .width *
+                                          .6,
                                       child: Text(
                                         name.elementAt(index),
                                         textAlign: TextAlign.left,
                                         style: TextStyle(
                                           fontFamily: "Times New Roman",
-                                          fontSize: 20,
+                                          fontSize: 18,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                     ),
                                     SizedBox(
-                                      height: 5,
+                                      height: 2,
                                     ),
                                     SizedBox(
                                       height:
@@ -374,6 +383,12 @@ class _PlaceTabState extends State<PlaceTab> {
                                           .size
                                           .width *
                                           .12,
+                                      width:
+                                      MediaQuery
+                                          .of(context)
+                                          .size
+                                          .width *
+                                          .6,
                                       child: Text(
                                         address.elementAt(index),
                                         style: TextStyle(
@@ -386,7 +401,14 @@ class _PlaceTabState extends State<PlaceTab> {
                                 ),
                               )),
                           onTap: () {
-                            // call the expanted view;
+                            print(uid.elementAt(index));
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => ExpandedPlaceView(),
+                                    settings: RouteSettings(
+                                      arguments: uid.elementAt(index),
+                                    )));
                           },
                         )
                       ],
@@ -399,6 +421,339 @@ class _PlaceTabState extends State<PlaceTab> {
   Widget build(BuildContext context) {
     return Scaffold(
         backgroundColor: Color(0x336200EA), body: Center(child: streamBuild()));
+  }
+}
+
+class ExpandedPlaceView extends StatefulWidget {
+  @override
+  _ExpandedPlaceViewState createState() => _ExpandedPlaceViewState();
+}
+
+class _ExpandedPlaceViewState extends State<ExpandedPlaceView> {
+  Future<QuerySnapshot> snapshot;
+
+  final TextEditingController _locName = TextEditingController();
+  final TextEditingController _contactNumber = TextEditingController();
+  final TextEditingController _address = TextEditingController();
+  final TextEditingController _category = TextEditingController();
+  GeoPoint location;
+  var imgUrl;
+
+  Widget loadingWindow() {
+    return Container(
+      child: Icon(Icons.error),
+    );
+  }
+
+  Widget modelBuild() {
+    return Scaffold(
+        appBar: AppBar(
+          title: Text(
+            _locName.text,
+            style: TextStyle(fontFamily: "Times New Roman"),
+          ),
+          backgroundColor: Color(0xFF6200EA),
+          shadowColor: Color(0xFF6200EA),
+        ),
+        body: Container(
+            padding: EdgeInsets.only(top: 10, right: 10, left: 10, bottom: 0),
+            decoration: BoxDecoration(
+                gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color(0xFF6200EA),
+                      Color(0xDD6200EA),
+                      Color(0xAA6200EA),
+                      Color(0x776200EA),
+                      Color(0x556200EA),
+                      Color(0x336200EA),
+                    ])),
+            alignment: Alignment.center,
+            child: ListView(children: <Widget>[
+              Container(
+                child: Image.network(
+                  imgUrl,
+                  height: MediaQuery
+                      .of(context)
+                      .size
+                      .height * .3,
+                ),
+              ),
+              Container(
+                height: 60,
+                child: Row(
+                  children: <Widget>[
+                    SizedBox(
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width * .25,
+                        child: Text(
+                          "Name : ",
+                          textAlign: TextAlign.left,
+                          softWrap: true,
+                          style: TextStyle(
+                            wordSpacing: 2,
+                            fontFamily: "Times New Roman",
+                            fontSize: 18,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )),
+                    SizedBox(
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width * .70,
+                        child: TextFormField(
+                          maxLines: 2,
+                          enabled: false,
+                          controller: _locName,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontFamily: "Times New Roman",
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15),
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.only(bottom: 5),
+                          ),
+                        )),
+                  ],
+                ),
+              ),
+              Container(
+                height: 40,
+                child: Row(
+                  children: <Widget>[
+                    SizedBox(
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width * .25,
+                        child: Text(
+                          "Phone No: ",
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                            wordSpacing: 2,
+                            fontFamily: "Times New Roman",
+                            fontSize: 18,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )),
+                    SizedBox(
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width * .70,
+                        child: TextFormField(
+                          enabled: false,
+                          controller: _contactNumber,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontFamily: "Times New Roman",
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15),
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.only(bottom: 5),
+                          ),
+                        )),
+                  ],
+                ),
+              ),
+              Container(
+                height: 60,
+                child: Row(
+                  children: <Widget>[
+                    SizedBox(
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width * .25,
+                        child: Text(
+                          "Address : ",
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                            wordSpacing: 2,
+                            fontFamily: "Times New Roman",
+                            fontSize: 18,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )),
+                    SizedBox(
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width * .70,
+                        child: TextFormField(
+                          enabled: false,
+                          controller: _address,
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontFamily: "Times New Roman",
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15),
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.only(bottom: 5),
+                          ),
+                        )),
+                  ],
+                ),
+              ),
+              Container(
+                height: 40,
+                child: Row(
+                  children: <Widget>[
+                    SizedBox(
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width * .25,
+                        child: Text(
+                          "District : ",
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                            wordSpacing: 2,
+                            fontFamily: "Times New Roman",
+                            fontSize: 18,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )),
+                    SizedBox(
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width * .70,
+                        child: Text(
+                          loc,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontFamily: "Times New Roman",
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15),
+                        )),
+                  ],
+                ),
+              ),
+              Container(
+                height: 40,
+                child: Row(
+                  children: <Widget>[
+                    SizedBox(
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width * .25,
+                        child: Text(
+                          "Category: ",
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                            wordSpacing: 2,
+                            fontFamily: "Times New Roman",
+                            fontSize: 18,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )),
+                    SizedBox(
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width * .70,
+                        child: TextFormField(
+                          enabled: false,
+                          controller: _category,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontFamily: "Times New Roman",
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15),
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.only(bottom: 5),
+                          ),
+                        )),
+                  ],
+                ),
+              ),
+              SizedBox(
+                height: 40,
+              ),
+              Center(
+                child: FlatButton(
+                  height: 50,
+                  minWidth: MediaQuery
+                      .of(context)
+                      .size
+                      .width * .4,
+                  color: Color(0xDD6200EA),
+                  padding: EdgeInsets.fromLTRB(5, 5, 5, 5),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  onPressed: () {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => ViewOnMap()));
+                  },
+                  child: Text(
+                    "View on map",
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontFamily: "Times New Roman",
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16),
+                  ),
+                ),
+              )
+            ])));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    CollectionReference attraction =
+    FirebaseFirestore.instance.collection('Attractions');
+    final String id = ModalRoute
+        .of(context)
+        .settings
+        .arguments;
+    return FutureBuilder<DocumentSnapshot>(
+      future: attraction.doc(id).get(),
+      builder:
+          (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
+        if (snapshot.hasError) {
+          return Text("Something went wrong");
+        }
+
+        if (snapshot.connectionState == ConnectionState.done) {
+          _locName.text = snapshot.data["Name"].toString();
+          _address.text = snapshot.data["Address"].toString();
+          _category.text = snapshot.data["Category"].toString();
+          _contactNumber.text = snapshot.data["Contact Number"].toString();
+          imgUrl = snapshot.data["ImgUrl"].toString();
+          location = snapshot.data["Location"];
+          lat = location.latitude;
+          lng = location.longitude;
+        }
+
+        if (imgUrl != null) {
+          return modelBuild();
+        }
+
+        return loadingWindow();
+      },
+    );
   }
 }
 
@@ -448,11 +803,14 @@ class _EventTabState extends State<EventTab> {
               final List date = snapshot.data.documents
                   .map<String>((doc) => (doc.data()['Date']).toString())
                   .toList();
-              final List location = snapshot.data.documents
-                  .map<String>((doc) => (doc.data()['Location']).toString())
+              final List address = snapshot.data.documents
+                  .map<String>((doc) => (doc.data()['Address']).toString())
                   .toList();
               final List url = snapshot.data.documents
                   .map<String>((doc) => (doc.data()['ImgUrl']).toString())
+                  .toList();
+              final List id = snapshot.data.documents
+                  .map<String>((doc) => (doc.id.toString()))
                   .toList();
               return ListView.builder(
                   itemCount: name.length,
@@ -554,18 +912,24 @@ class _EventTabState extends State<EventTab> {
                                           .of(context)
                                           .size
                                           .width *
-                                          .06,
+                                          .12,
+                                      width:
+                                      MediaQuery
+                                          .of(context)
+                                          .size
+                                          .width *
+                                          .6,
                                       child: Text(
                                         name.elementAt(index),
                                         style: TextStyle(
                                           fontFamily: "Times New Roman",
-                                          fontSize: 20,
+                                          fontSize: 15,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                     ),
                                     SizedBox(
-                                      height: 10,
+                                      height: 5,
                                     ),
                                     SizedBox(
                                       height:
@@ -574,18 +938,24 @@ class _EventTabState extends State<EventTab> {
                                           .size
                                           .width *
                                           .06,
+                                      width:
+                                      MediaQuery
+                                          .of(context)
+                                          .size
+                                          .width *
+                                          .6,
                                       child: Text(
-                                        location.elementAt(index) +
+                                        address.elementAt(index) +
                                             " \t" +
                                             date.elementAt(index),
                                         style: TextStyle(
                                           fontFamily: "Times New Roman",
-                                          fontSize: 15,
+                                          fontSize: 12,
                                         ),
                                       ),
                                     ),
                                     SizedBox(
-                                      height: 15,
+                                      height: 5,
                                     ),
                                     SizedBox(
                                       height:
@@ -594,18 +964,32 @@ class _EventTabState extends State<EventTab> {
                                           .size
                                           .width *
                                           .06,
+                                      width:
+                                      MediaQuery
+                                          .of(context)
+                                          .size
+                                          .width *
+                                          .6,
                                       child: Text(
                                         "by : " + owner.elementAt(index),
                                         style: TextStyle(
                                           fontFamily: "Times New Roman",
-                                          fontSize: 13,
+                                          fontSize: 12,
                                         ),
                                       ),
                                     ),
                                   ],
                                 ),
                               )),
-                          onTap: () {},
+                          onTap: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => ExpandedEventView(),
+                                    settings: RouteSettings(
+                                      arguments: id.elementAt(index),
+                                    )));
+                          },
                         )
                       ],
                     );
@@ -653,6 +1037,587 @@ class _EventTabState extends State<EventTab> {
             ),
           ],
         ));
+  }
+}
+
+class ExpandedEventView extends StatefulWidget {
+  @override
+  _ExpandedEventViewState createState() => _ExpandedEventViewState();
+}
+
+class _ExpandedEventViewState extends State<ExpandedEventView> {
+  Future<QuerySnapshot> snapshot;
+
+  final TextEditingController _eventName = TextEditingController();
+  final TextEditingController _contactNumber = TextEditingController();
+  final TextEditingController _address = TextEditingController();
+  final TextEditingController _date = TextEditingController();
+  final TextEditingController _time = TextEditingController();
+  final TextEditingController _description = TextEditingController();
+  final TextEditingController _owner = TextEditingController();
+  GeoPoint location;
+  var imgUrl;
+
+  Widget loadingWindow() {
+    return Container(
+      child: Icon(Icons.error),
+    );
+  }
+
+  Widget modelBuild() {
+    return Scaffold(
+        appBar: AppBar(
+          title: Text(
+            _eventName.text,
+            style: TextStyle(fontFamily: "Times New Roman"),
+          ),
+          backgroundColor: Color(0xFF6200EA),
+          shadowColor: Color(0xFF6200EA),
+        ),
+        body: Container(
+            padding: EdgeInsets.only(top: 10, right: 10, left: 10, bottom: 0),
+            decoration: BoxDecoration(
+                gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color(0xFF6200EA),
+                      Color(0xDD6200EA),
+                      Color(0xAA6200EA),
+                      Color(0x776200EA),
+                      Color(0x556200EA),
+                      Color(0x336200EA),
+                    ])),
+            alignment: Alignment.center,
+            child: ListView(children: <Widget>[
+              Container(
+                child: Image.network(
+                  imgUrl,
+                  height: MediaQuery
+                      .of(context)
+                      .size
+                      .height * .3,
+                ),
+              ),
+              Container(
+                height: 40,
+                child: Row(
+                  children: <Widget>[
+                    SizedBox(
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width * .30,
+                        child: Text(
+                          "Added by: ",
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                            wordSpacing: 2,
+                            fontFamily: "Times New Roman",
+                            fontSize: 18,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )),
+                    SizedBox(
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width * .65,
+                        child: TextFormField(
+                          enabled: false,
+                          controller: _owner,
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontFamily: "Times New Roman",
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15),
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.only(bottom: 5),
+                          ),
+                        )),
+                  ],
+                ),
+              ),
+              Container(
+                height: 40,
+                child: Row(
+                  children: <Widget>[
+                    SizedBox(
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width * .30,
+                        child: Text(
+                          "Name : ",
+                          textAlign: TextAlign.left,
+                          softWrap: true,
+                          style: TextStyle(
+                            wordSpacing: 2,
+                            fontFamily: "Times New Roman",
+                            fontSize: 18,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )),
+                    SizedBox(
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width * .65,
+                        child: TextFormField(
+                          maxLength: 200,
+                          enabled: false,
+                          controller: _eventName,
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontFamily: "Times New Roman",
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15),
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.only(bottom: 5),
+                          ),
+                        )),
+                  ],
+                ),
+              ),
+              Container(
+                height: 40,
+                child: Row(
+                  children: <Widget>[
+                    SizedBox(
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width * .30,
+                        child: Text(
+                          "Phone No: ",
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                            wordSpacing: 2,
+                            fontFamily: "Times New Roman",
+                            fontSize: 18,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )),
+                    SizedBox(
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width * .65,
+                        child: TextFormField(
+                          enabled: false,
+                          controller: _contactNumber,
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontFamily: "Times New Roman",
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15),
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.only(bottom: 5),
+                          ),
+                        )),
+                  ],
+                ),
+              ),
+              Container(
+                height: 40,
+                child: Row(
+                  children: <Widget>[
+                    SizedBox(
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width * .30,
+                        child: Text(
+                          "Address : ",
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                            wordSpacing: 2,
+                            fontFamily: "Times New Roman",
+                            fontSize: 18,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )),
+                    SizedBox(
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width * .65,
+                        child: TextFormField(
+                          enabled: false,
+                          controller: _address,
+                          textAlign: TextAlign.left,
+                          maxLength: 300,
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontFamily: "Times New Roman",
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15),
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.only(bottom: 0),
+                          ),
+                        )),
+                  ],
+                ),
+              ),
+              Container(
+                height: 40,
+                child: Row(
+                  children: <Widget>[
+                    SizedBox(
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width * .30,
+                        child: Text(
+                          "District : ",
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                            wordSpacing: 2,
+                            fontFamily: "Times New Roman",
+                            fontSize: 18,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )),
+                    SizedBox(
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width * .65,
+                        child: Text(
+                          loc,
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontFamily: "Times New Roman",
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15),
+                        )),
+                  ],
+                ),
+              ),
+              Container(
+                height: 40,
+                child: Row(
+                  children: <Widget>[
+                    SizedBox(
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width * .30,
+                        child: Text(
+                          "Date: ",
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                            wordSpacing: 2,
+                            fontFamily: "Times New Roman",
+                            fontSize: 18,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )),
+                    SizedBox(
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width * .65,
+                        child: TextFormField(
+                          enabled: false,
+                          controller: _date,
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontFamily: "Times New Roman",
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15),
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.only(bottom: 5),
+                          ),
+                        )),
+                  ],
+                ),
+              ),
+              Container(
+                height: 40,
+                child: Row(
+                  children: <Widget>[
+                    SizedBox(
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width * .30,
+                        child: Text(
+                          "Time: ",
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                            wordSpacing: 2,
+                            fontFamily: "Times New Roman",
+                            fontSize: 18,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )),
+                    SizedBox(
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width * .65,
+                        child: TextFormField(
+                          enabled: false,
+                          controller: _time,
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontFamily: "Times New Roman",
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15),
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.only(bottom: 5),
+                          ),
+                        )),
+                  ],
+                ),
+              ),
+              SizedBox(height: 10),
+              Container(
+                height: 100,
+                child: Row(
+                  children: <Widget>[
+                    Container(
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width * .30,
+                        alignment: Alignment.topCenter,
+                        child: Text(
+                          "Description: ",
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                            wordSpacing: 2,
+                            fontFamily: "Times New Roman",
+                            fontSize: 18,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )),
+                    SizedBox(
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width * .65,
+                        child: TextFormField(
+                          enabled: false,
+                          controller: _description,
+                          textAlign: TextAlign.left,
+                          maxLength: 128,
+                          maxLines: 10,
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontFamily: "Times New Roman",
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14),
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.only(bottom: 10),
+                          ),
+                        )),
+                  ],
+                ),
+              ),
+              SizedBox(
+                height: 20,
+              ),
+              Container(
+                padding: EdgeInsets.all(5),
+                child: Center(
+                  child: FlatButton(
+                    height: 50,
+                    minWidth: MediaQuery
+                        .of(context)
+                        .size
+                        .width * .4,
+                    color: Color(0xDD6200EA),
+                    padding: EdgeInsets.all(10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    onPressed: () {
+                      Navigator.push(context,
+                          MaterialPageRoute(builder: (context) => ViewOnMap()));
+                    },
+                    child: Text(
+                      "View on map",
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontFamily: "Times New Roman",
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16),
+                    ),
+                  ),
+                ),
+              )
+            ])));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    CollectionReference attraction = FirebaseFirestore.instance
+        .collection('Events')
+        .doc(loc)
+        .collection('Details');
+    final String id = ModalRoute
+        .of(context)
+        .settings
+        .arguments;
+    return FutureBuilder<DocumentSnapshot>(
+      future: attraction.doc(id).get(),
+      builder:
+          (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
+        if (snapshot.hasError) {
+          return Text("Something went wrong");
+        }
+
+        if (snapshot.connectionState == ConnectionState.done) {
+          _eventName.text = snapshot.data["Name"].toString();
+          _address.text = snapshot.data["Address"].toString();
+          _contactNumber.text = snapshot.data["Contact Number"].toString();
+          _date.text = snapshot.data["Date"].toString();
+          _time.text = snapshot.data["Time"].toString();
+          _description.text = snapshot.data["Description"].toString();
+          _owner.text = snapshot.data["OwnerName"].toString();
+          imgUrl = snapshot.data["ImgUrl"].toString();
+          location = snapshot.data["Location"];
+          lat = location.latitude;
+          lng = location.longitude;
+          print(lat.toString() + " " + lng.toString());
+        }
+
+        if (imgUrl != null) {
+          return modelBuild();
+        }
+
+        return loadingWindow();
+      },
+    );
+  }
+}
+
+class ViewOnMap extends StatefulWidget {
+  @override
+  _ViewOnMapState createState() => _ViewOnMapState();
+}
+
+class _ViewOnMapState extends State<ViewOnMap> {
+  Completer<GoogleMapController> _controller = Completer();
+
+  final Set<Marker> _markers = {};
+
+  LatLng _lastMapPosition = LatLng(lat, lng);
+
+  MapType _currentMapType = MapType.normal;
+
+  void _onMapTypeButtonPressed() {
+    setState(() {
+      _currentMapType = _currentMapType == MapType.normal
+          ? MapType.satellite
+          : MapType.normal;
+    });
+  }
+
+  void _addMarker() {
+    setState(() {
+      _markers.clear();
+      _markers.add(Marker(
+        draggable: true,
+        // This marker id can be anything that uniquely identifies each marker.
+        markerId: MarkerId(_lastMapPosition.toString()),
+        position: _lastMapPosition,
+        infoWindow: InfoWindow(
+          title: _lastMapPosition.toString(),
+        ),
+        icon: BitmapDescriptor.defaultMarker,
+      ));
+    });
+  }
+
+  void _onCameraMove(CameraPosition position) {
+    _lastMapPosition = position.target;
+  }
+
+  void _onMapCreated(GoogleMapController controller) {
+    _controller.complete(controller);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _addMarker();
+    return Scaffold(
+      body: Stack(
+        children: <Widget>[
+          GoogleMap(
+            onMapCreated: _onMapCreated,
+            initialCameraPosition: CameraPosition(
+              target: LatLng(lat, lng),
+              zoom: 10,
+            ),
+            mapType: _currentMapType,
+            markers: _markers,
+            onCameraMove: _onCameraMove,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Align(
+              alignment: Alignment.topRight,
+              child: Column(
+                children: <Widget>[
+                  FloatingActionButton(
+                    heroTag: 'MapChange',
+                    onPressed: _onMapTypeButtonPressed,
+                    materialTapTargetSize: MaterialTapTargetSize.padded,
+                    backgroundColor: Color(0xCC6200EA),
+                    child: const Icon(Icons.map, size: 36.0),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Align(
+              alignment: Alignment.topLeft,
+              child: Column(
+                children: <Widget>[
+                  FloatingActionButton(
+                    heroTag: 'MapChange2',
+                    onPressed: () {
+                      _markers.clear();
+                      Navigator.pop(context);
+                    },
+                    materialTapTargetSize: MaterialTapTargetSize.padded,
+                    backgroundColor: Color(0xCC6200EA),
+                    child: const Icon(Icons.arrow_back, size: 36.0),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+        ],
+      ),
+    );
   }
 }
 
@@ -912,7 +1877,7 @@ class _NewEventState extends State<NewEvent> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
   final TextEditingController _timeController = TextEditingController();
-  final TextEditingController _areaController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
   final TextEditingController _desController = TextEditingController();
   final TextEditingController _conNoController = TextEditingController();
   final TextEditingController _notificationController = TextEditingController();
@@ -920,7 +1885,7 @@ class _NewEventState extends State<NewEvent> {
   TimeOfDay selectedTime = TimeOfDay(hour: 00, minute: 00);
   File image;
 
-  Future<void> downloadURLExample(name) async {
+  Future<void> uploadWithImg(name) async {
     String downloadURL =
     await FirebaseStorage.instance.ref('Event/$name.jpg').getDownloadURL();
     event
@@ -928,9 +1893,10 @@ class _NewEventState extends State<NewEvent> {
         .update({
       'ImgUrl': downloadURL,
     })
-        .then((value) => _notificationController.text = "User Added")
+        .then((value) => _notificationController.text = "Event Added")
         .catchError((error) =>
-    _notificationController.text = "Failed to add user: $error");
+    _notificationController.text = "Failed to add event: $error");
+    Navigator.pop(context);
   }
 
   Future uploadPic(name) async {
@@ -940,7 +1906,7 @@ class _NewEventState extends State<NewEvent> {
       Reference ref = storage.ref().child('Event/$name.jpg');
       UploadTask uploadTask = ref.putFile(image);
       uploadTask.then((res) {
-        downloadURLExample(name);
+        uploadWithImg(name);
       });
       uploadTask.catchError((error) {
         _notificationController.text = 'Unable to Upload Image $error';
@@ -951,9 +1917,10 @@ class _NewEventState extends State<NewEvent> {
           .update({
         'ImgUrl': noImageUrl,
       })
-          .then((value) => _notificationController.text = "User Added")
+          .then((value) => _notificationController.text = "Event Added")
           .catchError((error) =>
-      _notificationController.text = "Failed to add user: $error");
+      _notificationController.text = "Failed to add event: $error");
+      Navigator.pop(context);
     }
   }
 
@@ -981,10 +1948,39 @@ class _NewEventState extends State<NewEvent> {
   }
 
   Widget showImg() {
+    var val = MediaQuery
+        .of(context)
+        .size
+        .width;
     if (image != null) {
       return Image.file(image);
     }
-    return null;
+    return Container(
+      padding: EdgeInsets.only(
+          top: val * .1, left: val * .1, right: val * .1, bottom: val * .1),
+      color: Colors.white60,
+      child: Column(
+        children: [
+          Container(
+              height: 150,
+              width: 150,
+              child: Icon(
+                Icons.file_upload,
+                size: 120,
+                color: Colors.black,
+              )),
+          Text(
+            "Upload Image",
+            style: TextStyle(
+              fontSize: 18,
+              fontFamily: "Times New Roman",
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          )
+        ],
+      ),
+    );
   }
 
   Future<void> addEvent() async {
@@ -992,17 +1988,17 @@ class _NewEventState extends State<NewEvent> {
     if (!(_nameController.text.isEmpty ||
         _dateController.text.isEmpty ||
         _timeController.text.isEmpty ||
-        _areaController.text.isEmpty ||
+        _addressController.text.isEmpty ||
         _conNoController.text.isEmpty ||
         _desController.text.isEmpty)) {
       var long = double.parse(_locController.text.split(", ")[1]);
       var lat = double.parse(_locController.text.split(", ")[0]);
       event.add({
-        'Coordinates': GeoPoint(lat, long),
+        'Location': GeoPoint(lat, long),
         'Date': _dateController.text,
-        'Discription': _desController.text,
+        'Description': _desController.text,
         'District': loc,
-        'Location': _areaController.text,
+        'Address': _addressController.text,
         'Name': _nameController.text,
         'Contact Number': _conNoController.text,
         'OwnerID': FirebaseAuth.instance.currentUser.uid,
@@ -1012,7 +2008,7 @@ class _NewEventState extends State<NewEvent> {
         uploadPic(value.id);
       }).catchError((error) => info = "Failed to add Event $error");
     } else {
-      print("Fill all the required fields");
+      info = "Fill all the required fields";
     }
     _notificationController.text = info;
   }
@@ -1051,7 +2047,6 @@ class _NewEventState extends State<NewEvent> {
   }
 
   Widget _uploadImageWindow(BuildContext context) {
-    print("Image Potion");
     return new AlertDialog(
       title: const Text('Choose from '),
       content: new Column(
@@ -1313,7 +2308,7 @@ class _NewEventState extends State<NewEvent> {
                             .size
                             .width * .60,
                         child: TextFormField(
-                          controller: _areaController,
+                          controller: _addressController,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                               color: Colors.black,
@@ -1461,19 +2456,28 @@ class _NewEventState extends State<NewEvent> {
                 ),
               ),
               SizedBox(height: 30),
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.blueAccent),
+              GestureDetector(
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) =>
+                        _uploadImageWindow(context),
+                  );
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.blueAccent),
+                  ),
+                  height: MediaQuery
+                      .of(context)
+                      .size
+                      .width * .8,
+                  width: MediaQuery
+                      .of(context)
+                      .size
+                      .width * .8,
+                  child: showImg(),
                 ),
-                height: MediaQuery
-                    .of(context)
-                    .size
-                    .width * .8,
-                width: MediaQuery
-                    .of(context)
-                    .size
-                    .width * .8,
-                child: showImg(),
               ),
               SizedBox(
                 child: TextField(
@@ -1485,83 +2489,30 @@ class _NewEventState extends State<NewEvent> {
               ),
               Container(
                 height: 50,
-                child: Row(
-                  children: [
-                    Container(
-                      width: MediaQuery
-                          .of(context)
-                          .size
-                          .width * .42,
-                      color: Color(0xFF6200EA),
-                      child: Row(
-                        children: [
-                          FlatButton(
-                            minWidth: MediaQuery
-                                .of(context)
-                                .size
-                                .width * .20,
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) =>
-                                    _uploadImageWindow(context),
-                              );
-                            },
-                            child: Text(
-                              "Upload Image",
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontFamily: "Times New Roman",
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13),
-                            ),
-                            color: Color(0xFF6200EA),
-                          ),
-                          Icon(
-                            Icons.image,
-                            size: 40,
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(width: MediaQuery
-                        .of(context)
-                        .size
-                        .width * .145),
-                    Container(
-                      width: MediaQuery
-                          .of(context)
-                          .size
-                          .width * .41,
-                      color: Color(0xFF6200EA),
-                      child: Row(
-                        children: [
-                          FlatButton(
-                            minWidth: MediaQuery
-                                .of(context)
-                                .size
-                                .width * .20,
-                            onPressed: () {
-                              addEvent();
-                            },
-                            child: Text(
-                              "Add Event",
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontFamily: "Times New Roman",
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18),
-                            ),
-                            color: Color(0xFF6200EA),
-                          ),
-                          Icon(
-                            Icons.add,
-                            size: 40,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                alignment: Alignment.center,
+                width: double.infinity,
+                child: FlatButton(
+                  height: 50,
+                  minWidth: MediaQuery
+                      .of(context)
+                      .size
+                      .width * .4,
+                  color: Color(0xDD6200EA),
+                  padding: EdgeInsets.fromLTRB(5, 5, 5, 5),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  onPressed: () {
+                    addEvent();
+                  },
+                  child: Text(
+                    "Add Event",
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontFamily: "Times New Roman",
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18),
+                  ),
                 ),
               ),
             ])));
@@ -1668,7 +2619,6 @@ class _LocationViewState extends State<LocationView> {
   }
 }
 
-
 class Profile extends StatefulWidget {
   @override
   _ProfileState createState() => _ProfileState();
@@ -1719,7 +2669,7 @@ class _ProfileState extends State<Profile> {
                   .of(context)
                   .size
                   .height * .40,
-              fit: BoxFit.fill,
+              fit: BoxFit.fitHeight,
             ),
             SizedBox(height: MediaQuery
                 .of(context)
@@ -1809,7 +2759,6 @@ class Emergency extends StatefulWidget {
 }
 
 class _EmergencyState extends State<Emergency> {
-
   Widget soon() {
     return Center(
       child: Text(
@@ -1832,7 +2781,8 @@ class _EmergencyState extends State<Emergency> {
           backgroundColor: Color(0xFF6200EA),
           title: Text('Transport'),
         ),
-        backgroundColor: Color(0x556200EA), body: Center(child: soon()));
+        backgroundColor: Color(0x556200EA),
+        body: Center(child: soon()));
   }
 }
 
@@ -1842,7 +2792,6 @@ class Transport extends StatefulWidget {
 }
 
 class _TransportState extends State<Transport> {
-
   Widget soon() {
     return Center(
       child: Text(
@@ -1865,7 +2814,8 @@ class _TransportState extends State<Transport> {
           backgroundColor: Color(0xFF6200EA),
           title: Text('Transport'),
         ),
-        backgroundColor: Color(0x556200EA), body: Center(child: soon()));
+        backgroundColor: Color(0x556200EA),
+        body: Center(child: soon()));
   }
 }
 
@@ -1875,7 +2825,6 @@ class Information extends StatefulWidget {
 }
 
 class _InformationState extends State<Information> {
-
   Widget soon() {
     return Center(
       child: Text(
@@ -1898,7 +2847,8 @@ class _InformationState extends State<Information> {
           backgroundColor: Color(0xFF6200EA),
           title: Text('Transport'),
         ),
-        backgroundColor: Color(0x556200EA), body: Center(child: soon()));
+        backgroundColor: Color(0x556200EA),
+        body: Center(child: soon()));
   }
 }
 
@@ -1908,7 +2858,6 @@ class Accommodation extends StatefulWidget {
 }
 
 class _AccommodationState extends State<Accommodation> {
-
   Widget soon() {
     return Center(
       child: Text(
@@ -1931,7 +2880,8 @@ class _AccommodationState extends State<Accommodation> {
           backgroundColor: Color(0xFF6200EA),
           title: Text('Transport'),
         ),
-        backgroundColor: Color(0x556200EA), body: Center(child: soon()));
+        backgroundColor: Color(0x556200EA),
+        body: Center(child: soon()));
   }
 }
 
@@ -1941,7 +2891,6 @@ class TourAssistant extends StatefulWidget {
 }
 
 class _TourAssistantState extends State<TourAssistant> {
-
   Widget soon() {
     return Center(
       child: Text(
@@ -1964,6 +2913,7 @@ class _TourAssistantState extends State<TourAssistant> {
           backgroundColor: Color(0xFF6200EA),
           title: Text('Transport'),
         ),
-        backgroundColor: Color(0x556200EA), body: Center(child: soon()));
+        backgroundColor: Color(0x556200EA),
+        body: Center(child: soon()));
   }
 }

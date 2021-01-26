@@ -21,12 +21,7 @@ class _LogInState extends State<LogIn> {
   GoogleSignIn googleSignIn = GoogleSignIn();
   TextEditingController _emailController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
-
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
+  TextEditingController _notificationController = TextEditingController();
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool isRememberMe = false;
@@ -52,8 +47,6 @@ class _LogInState extends State<LogIn> {
       final User currentUser = _auth.currentUser;
       assert(user.uid == currentUser.uid);
 
-      print('signInWithGoogle succeeded: $user');
-
       return '$user';
     }
     return null;
@@ -66,13 +59,18 @@ class _LogInState extends State<LogIn> {
           password: _passwordController.text
       )).user;
       if (user != null) {
-        goHome();
+        if (!user.emailVerified) {
+          await user.sendEmailVerification();
+          _notificationController.text = 'Please verify your email';
+        } else {
+          goHome();
+        }
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
-        print('No user found for that email.');
+        _notificationController.text = 'Wrong Credentials';
       } else if (e.code == 'wrong-password') {
-        print('Wrong password provided for that user.');
+        _notificationController.text = 'Wrong Credentials';
       }
     }
   }
@@ -93,7 +91,6 @@ class _LogInState extends State<LogIn> {
       splashColor: Colors.white,
       onPressed: () {
         signInWithGoogle().then((result) {
-          print(result);
           goHome();
         });
       },
@@ -107,7 +104,11 @@ class _LogInState extends State<LogIn> {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Image(image: AssetImage("lib/assets/google_logo.png"), height: 40.0),
+            Image(image: AssetImage("lib/assets/google_logo.png"),
+                height: MediaQuery
+                    .of(context)
+                    .size
+                    .height * .06),
             Padding(
               padding: const EdgeInsets.only(left: 10),
               child: Text(
@@ -136,7 +137,10 @@ class _LogInState extends State<LogIn> {
                 fontWeight: FontWeight.bold
             ),
           ),
-          SizedBox(height:5),
+          SizedBox(height: MediaQuery
+              .of(context)
+              .size
+              .height * .01),
           Container(
               alignment: Alignment.centerLeft,
               decoration: BoxDecoration(
@@ -150,7 +154,10 @@ class _LogInState extends State<LogIn> {
                     )
                   ]
               ),
-              height: 50,
+              height: MediaQuery
+                  .of(context)
+                  .size
+                  .height * .07,
               child: TextFormField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
@@ -190,7 +197,10 @@ class _LogInState extends State<LogIn> {
                 fontWeight: FontWeight.bold
             ),
           ),
-          SizedBox(height:5),
+          SizedBox(height: MediaQuery
+              .of(context)
+              .size
+              .height * .01),
           Container(
               alignment: Alignment.centerLeft,
               decoration: BoxDecoration(
@@ -204,7 +214,10 @@ class _LogInState extends State<LogIn> {
                     )
                   ]
               ),
-              height: 50,
+              height: MediaQuery
+                  .of(context)
+                  .size
+                  .height * .07,
               child: TextFormField(
                 controller: _passwordController,
                 obscureText: true,
@@ -235,7 +248,7 @@ class _LogInState extends State<LogIn> {
     return Container(
       alignment: Alignment.centerRight,
       child: FlatButton(
-          onPressed: ()=> print("Forgot Password"),
+          onPressed: () => () {},
           padding: EdgeInsets.only(right:0),
           child: Text(
             'Forgot Password?',
@@ -249,7 +262,10 @@ class _LogInState extends State<LogIn> {
 
   Widget buildRememberCb() {
     return Container(
-        height: 20,
+        height: MediaQuery
+            .of(context)
+            .size
+            .height * .04,
         child: Row(
           children: <Widget>[
             Theme(
@@ -283,7 +299,10 @@ class _LogInState extends State<LogIn> {
         padding: EdgeInsets.symmetric(vertical: 25),
         width: double.infinity,
         child: FlatButton(
-          minWidth: 200,
+          minWidth: MediaQuery
+              .of(context)
+              .size
+              .width * .20,
           onPressed: () async {
             _login(context);
           },
@@ -343,8 +362,10 @@ class _LogInState extends State<LogIn> {
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       appBar: new AppBar(
+        automaticallyImplyLeading: false,
         title: new Text(
           'Smart Tourism',
           style: TextStyle(
@@ -363,8 +384,14 @@ class _LogInState extends State<LogIn> {
               children: <Widget>[
                 Container(
                     alignment: Alignment.centerRight,
-                    height: double.infinity,
-                    width: double.infinity,
+                    height: MediaQuery
+                        .of(context)
+                        .size
+                        .height,
+                    width: MediaQuery
+                        .of(context)
+                        .size
+                        .width,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                           begin: Alignment.topCenter,
@@ -383,31 +410,59 @@ class _LogInState extends State<LogIn> {
                     child: SingleChildScrollView(
                       physics: AlwaysScrollableScrollPhysics(),
                       padding: EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 20
+                          horizontal: 10,
+                          vertical: 10
                       ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
                           SizedBox(
-                            height: 30,
+                            height: MediaQuery
+                                .of(context)
+                                .size
+                                .height * .04,
                           ),
                           buildEmail(),
                           SizedBox(
-                            height: 20,
+                            height: MediaQuery
+                                .of(context)
+                                .size
+                                .height * .03,
                           ),
                           buildPassword(),
                           Row(
                             children: <Widget>[
                               buildRememberCb(),
                               SizedBox(
-                                width: 100,
+                                width: MediaQuery
+                                    .of(context)
+                                    .size
+                                    .width * .32,
                               ),
                               buildForgotPassBtn(),
                             ],
                           ),
                           SizedBox(
-                              width: 250,
+                            width: MediaQuery
+                                .of(context)
+                                .size
+                                .width * .60,
+                            child: TextFormField(
+                              decoration: InputDecoration(border: InputBorder
+                                  .none),
+                              readOnly: true,
+                              controller: _notificationController,
+                              style: TextStyle(
+                                color: Colors.red,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          SizedBox(
+                              width: MediaQuery
+                                  .of(context)
+                                  .size
+                                  .width * .60,
                               child: buildLoginBtn(context)
                           ),
                           Text(
@@ -419,11 +474,17 @@ class _LogInState extends State<LogIn> {
                             ),
                           ),
                           SizedBox(
-                            height: 25,
+                            height: MediaQuery
+                                .of(context)
+                                .size
+                                .height * .04,
                           ),
                           googleSignInButton(),
                           SizedBox(
-                            height: 25,
+                            height: MediaQuery
+                                .of(context)
+                                .size
+                                .height * .04,
                           ),
                           buildSignUpBtn(context)
                         ],
@@ -435,4 +496,5 @@ class _LogInState extends State<LogIn> {
           )),
     );
   }
+
 }
